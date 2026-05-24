@@ -94,7 +94,7 @@ else:
             st.header("🏁 Exam Results")
             st.write(f"### Score: {st.session_state.score} / {total_q}")
             
-            # --- THE AESTHETIC HTML REPORT GENERATOR ---
+            # --- THE AESTHETIC HTML REPORT GENERATOR (NOW WITH OPTIONS) ---
             html_report = f"""
             <!DOCTYPE html>
             <html>
@@ -109,6 +109,8 @@ else:
                 .incorrect {{ border-left-color: #e74c3c; }}
                 .skipped {{ border-left-color: #f39c12; }}
                 .q-text {{ font-weight: bold; font-size: 16px; margin-bottom: 15px; line-height: 1.5; }}
+                .options-box {{ background-color: #f9f9f9; border: 1px solid #eaeaea; border-radius: 6px; padding: 12px 20px; margin-bottom: 15px; }}
+                .options-box ul {{ margin: 0; padding-left: 20px; color: #444; font-size: 15px; line-height: 1.6; }}
                 .ans-row {{ margin: 8px 0; font-size: 15px; }}
                 .label {{ font-weight: bold; display: inline-block; width: 120px; }}
                 .pearl {{ background: #fffde7; padding: 15px; border-left: 4px solid #f1c40f; margin-top: 20px; font-style: italic; border-radius: 0 4px 4px 0; }}
@@ -149,6 +151,16 @@ else:
                 html_report += f"""
                 <div class="card {status_class}">
                     <div class="q-text">Q{i+1}. {q_data['Question']}</div>
+                    
+                    <div class="options-box">
+                        <ul>
+                            <li><b>A:</b> {q_data['Option_A']}</li>
+                            <li><b>B:</b> {q_data['Option_B']}</li>
+                            <li><b>C:</b> {q_data['Option_C']}</li>
+                            <li><b>D:</b> {q_data['Option_D']}</li>
+                        </ul>
+                    </div>
+
                     <div class="ans-row"><span class="label">Status:</span> <b>{icon}</b></div>
                     <div class="ans-row"><span class="label">Your Answer:</span> {user_ans_text}</div>
                     <div class="ans-row"><span class="label">Correct Answer:</span> {correct_ans_text}</div>
@@ -159,7 +171,7 @@ else:
             html_report += "</body></html>"
             
             st.download_button(
-                label="📄 Download Aesthetic Report (HTML/PDF)",
+                label="📄 Download Aesthetic Report (HTML)",
                 data=html_report.encode('utf-8'),
                 file_name="NEET_PG_Scorecard.html",
                 mime="text/html",
