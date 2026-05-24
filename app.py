@@ -171,7 +171,7 @@ else:
             html_report += "</body></html>"
             
             st.download_button(
-                label="📄 Download Aesthetic Report (HTML)",
+                label="📄 Download Report",
                 data=html_report.encode('utf-8'),
                 file_name="NEET_PG_Scorecard.html",
                 mime="text/html",
