@@ -9,7 +9,6 @@ st.set_page_config(page_title="NEET PG Pro Simulator", layout="wide", initial_si
 # --- CSS INJECTION (THE UI FIX) ---
 st.markdown("""
     <style>
-    /* Force sidebar buttons to never wrap text and look uniform */
     [data-testid="stSidebar"] button p {
         white-space: nowrap !important;
         font-size: 13px !important;
@@ -94,13 +93,87 @@ else:
         else:
             st.header("🏁 Exam Results")
             st.write(f"### Score: {st.session_state.score} / {total_q}")
+            
+            # --- THE AESTHETIC HTML REPORT GENERATOR ---
+            html_report = f"""
+            <!DOCTYPE html>
+            <html>
+            <head>
+            <meta charset="UTF-8">
+            <style>
+                body {{ font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f4f7f6; color: #333; padding: 40px; max-width: 900px; margin: auto; }}
+                .header {{ text-align: center; margin-bottom: 40px; border-bottom: 2px solid #ddd; padding-bottom: 20px; }}
+                .score-box {{ font-size: 28px; font-weight: bold; color: #2c3e50; background: #e0f7fa; padding: 15px 30px; border-radius: 8px; display: inline-block; margin-top: 10px; }}
+                .card {{ background: white; padding: 25px; border-radius: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); margin-bottom: 25px; border-left: 6px solid #ccc; }}
+                .correct {{ border-left-color: #2ecc71; }}
+                .incorrect {{ border-left-color: #e74c3c; }}
+                .skipped {{ border-left-color: #f39c12; }}
+                .q-text {{ font-weight: bold; font-size: 16px; margin-bottom: 15px; line-height: 1.5; }}
+                .ans-row {{ margin: 8px 0; font-size: 15px; }}
+                .label {{ font-weight: bold; display: inline-block; width: 120px; }}
+                .pearl {{ background: #fffde7; padding: 15px; border-left: 4px solid #f1c40f; margin-top: 20px; font-style: italic; border-radius: 0 4px 4px 0; }}
+            </style>
+            </head>
+            <body>
+                <div class="header">
+                    <h1>INICET / NEET PG Performance Report</h1>
+                    <div class="score-box">Final Score: {st.session_state.score} / {total_q}</div>
+                </div>
+            """
+            
+            for i in range(total_q):
+                q_data = questions[i]
+                user_ans_key = st.session_state.answers.get(i)
+                correct_ans_key = q_data["Correct"]
+                
+                options_map = {
+                    "Option_A": q_data["Option_A"],
+                    "Option_B": q_data["Option_B"],
+                    "Option_C": q_data["Option_C"],
+                    "Option_D": q_data["Option_D"]
+                }
+                
+                user_ans_text = options_map.get(user_ans_key, "Skipped completely")
+                correct_ans_text = options_map.get(correct_ans_key, "Error")
+                
+                if user_ans_key == correct_ans_key:
+                    status_class = "correct"
+                    icon = "✅ Correct"
+                elif user_ans_key is None:
+                    status_class = "skipped"
+                    icon = "⚠️ Skipped"
+                else:
+                    status_class = "incorrect"
+                    icon = "❌ Incorrect"
+                    
+                html_report += f"""
+                <div class="card {status_class}">
+                    <div class="q-text">Q{i+1}. {q_data['Question']}</div>
+                    <div class="ans-row"><span class="label">Status:</span> <b>{icon}</b></div>
+                    <div class="ans-row"><span class="label">Your Answer:</span> {user_ans_text}</div>
+                    <div class="ans-row"><span class="label">Correct Answer:</span> {correct_ans_text}</div>
+                    <div class="pearl"><b>Clinical Pearl:</b><br><br>{q_data['Explanation']}</div>
+                </div>
+                """
+                
+            html_report += "</body></html>"
+            
+            st.download_button(
+                label="📄 Download Aesthetic Report (HTML/PDF)",
+                data=html_report.encode('utf-8'),
+                file_name="NEET_PG_Scorecard.html",
+                mime="text/html",
+                use_container_width=True,
+                type="primary"
+            )
+            # --- END EXPORT LOGIC ---
+            
             st.markdown("---")
             st.write("**Review Your Answers:**")
 
-        # Question Grid Navigation (Changed to 4 columns for better spacing)
+        # Question Grid Navigation
         cols = st.columns(4)
         for i in range(total_q):
-            # Color Logic
             flag = "🚩" if i in st.session_state.review and not st.session_state.submitted else ""
             
             if st.session_state.submitted:
@@ -118,12 +191,10 @@ else:
                 else:
                     color = "🔵" 
 
-            # Grid Buttons
             if cols[i % 4].button(f"{color} {i+1} {flag}", key=f"nav_{i}"):
                 st.session_state.current_q = i
                 st.rerun()
 
-        # Submit Button
         if not st.session_state.submitted:
             st.markdown("---")
             if st.button("🛑 SUBMIT EXAM", type="primary", use_container_width=True):
@@ -169,7 +240,6 @@ else:
 
         st.markdown("---")
 
-        # --- NAVIGATION CONTROLS ---
         col1, col2, col3 = st.columns([1, 1, 1])
         
         with col1:
@@ -194,7 +264,6 @@ else:
                     st.session_state.current_q += 1
                     st.rerun()
 
-        # --- EXPLANATION BOX ---
         if st.session_state.submitted:
             st.divider()
             correct_key = q["Correct"]
@@ -210,6 +279,6 @@ else:
             st.info(f"**Clinical Pearl / Explanation:**\n\n{q['Explanation']}")
             
             st.markdown("---")
-            if st.button("🔄 Retake Exam / Clear Memory", type="primary"):
+            if st.button("🔄 Retake Exam / Clear Memory"):
                 st.session_state.clear()
                 st.rerun()
